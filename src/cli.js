@@ -1,22 +1,51 @@
-import fs from 'fs'
-import trataError from './errors/errorFunction.js'
-import { wordsCount } from './index.js'
-import { montaSaidaArquivo } from './helpers.js'
-// import { trataError } from './errors/errorFunction.js'
+import fs from 'fs';
+import path from 'path';
+import trataError from './errors/errorFunction.js';
+import { wordsCount } from './index.js';
+import { montaSaidaArquivo } from './helpers.js';
+import { Command } from 'commander';
 
-const caminhoArquivo = process.argv 
-const link = caminhoArquivo[2]
-const endereco = caminhoArquivo[3]
+const program = new Command()
 
-fs.readFile(link, 'utf-8', (erro, texto) => {
-    try {
-      if(erro) throw erro;
-      const resultado = wordsCount(texto)
-      createAndSaveFile(resultado, endereco)
-    } catch (erro) {
-      trataError(erro)
+program
+  .version('0.0.1')
+  .option('-t, --texto <string>', 'camino del texto a ser procesado')
+  .option('-d, --destino <string>', 'camino de carpeta donde guardar archivo de resultados')
+  .action((options) => {
+    const { texto, destino } = options;
+
+    if(!texto || !destino){
+      console.error('error: por favor introducir camino de origen y destino')
+      program.help();
+      return
     }
-})
+
+    const caminoTexto = path.resolve(texto);
+    const caminoDestino = path.resolve(destino)
+      try {
+        procesaArchivo(caminoTexto, caminoDestino) 
+        console.log('texto procesado');
+      } catch (erro) {
+        console.log('ocurrio un error en el procesamiento', erro)
+      }
+  })
+program.parse()
+
+// const caminhoArquivo = process.argv
+// const link = caminhoArquivo[2]
+// const endereco = caminhoArquivo[3]
+
+function procesaArchivo(texto, destino){
+  fs.readFile(texto, 'utf-8', (erro, texto) => {
+      try {
+        if(erro) throw erro;
+        const resultado = wordsCount(texto)
+        createAndSaveFile(resultado, destino)
+      } catch (erro) {
+        trataError(erro)
+      }
+  })
+}
 //
 // async function createAndSaveFile(listaPalavras, endereco){
   // const newFile = `${endereco}/resultado.txt`
